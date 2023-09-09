@@ -4,7 +4,8 @@
   "description": "An ergonomic wrapper around the launch-darkly-react-native sdk, featuring *hooks*",
   "main": "index.ts",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "lint ."
   },
   "keywords": [
     "launch",

@@ -33,10 +33,10 @@ npm i launch-darkly-react-native-ergonomically
 
 This factory will create a context provider, hooks and some escape hatch functions that you will need to re-export for use in your application.
 
-Create a file called `launchDarkly.ts` and put this in it
+Create a file called `LaunchDarkly.ts` and put this in it
 
 ```ts
-// launchDarkly.ts
+// LaunchDarkly.ts
 import { LaunchDarklyReactNativeFactory } from "launch-darly-react-native-client-factory";
 
 export const {

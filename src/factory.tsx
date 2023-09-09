@@ -19,10 +19,10 @@ type Props = {
 };
 
 /**
- * Create a file called `launchDarkly.ts` and put this in it
+ * Create a file called `LaunchDarkly.ts` and put this in it
  *
  * ```ts
- * // launchDarkly.ts
+ * // LaunchDarkly.ts
  * import { LaunchDarklyReactNativeFactory } from "launch-darly-react-native-client-factory";
  *
  * export const {
