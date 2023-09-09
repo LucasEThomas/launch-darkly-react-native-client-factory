@@ -1,7 +1,7 @@
 {
   "name": "launch-darkly-react-native-client-factory",
-  "version": "0.0.4",
-  "description": "An ergonomic wrapper around the launch-darkly-react-native sdk, featuring *hooks*",
+  "version": "0.0.5",
+  "description": "An ergonomic wrapper around the launchdarkly-react-native sdk, featuring *hooks*",
   "repository": {
     "url": "https://github.com/LucasEThomas/launch-darkly-react-native-client-factory"
   },

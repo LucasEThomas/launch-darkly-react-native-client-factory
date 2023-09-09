@@ -1,6 +1,6 @@
 # Launch Darkly React Native Client Factory
 
-This is an ergonomic wrapper around the `launch-darkly-react-native-client` sdk package.
+This is an ergonomic wrapper around the `launchdarkly-react-native-client` sdk package.
 
 It makes using launch darkly feature flags in your React Native components this easy:
 
@@ -17,10 +17,10 @@ The feature flags returned by this hook are strongly typed (if you're using type
 
 This package assumes that it will be used in a **React Native** application.
 
-If you don't already have it, you will need the the launch-darkly-react-native-client sdk
+If you don't already have it, you will need the the launchdarkly-react-native-client sdk
 
 ```sh
-npm i launch-darkly-react-native-client
+npm i launchdarkly-react-native-client
 ```
 
 and, of course
