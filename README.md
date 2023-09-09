@@ -26,7 +26,7 @@ npm i launch-darkly-react-native-client
 and, of course
 
 ```sh
-npm i launch-darkly-react-native-ergonomically
+npm i launch-darkly-react-native-client-factory
 ```
 
 # usage
