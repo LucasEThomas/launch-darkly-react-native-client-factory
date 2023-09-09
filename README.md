@@ -61,7 +61,7 @@ You will need to add the provider to your app.tsx like this:
 ```tsx
 // App.tsx
 import React from "react";
-import { LaunchDarklyProvider } from "./launchDarkly";
+import { LaunchDarklyProvider } from "./LaunchDarkly";
 
 export const app () => {
   // learn how to create your launch darkly context and config here https://docs.launchdarkly.com/sdk/client-side/react/react-native
@@ -85,7 +85,7 @@ now, in your react native component, use it like this:
 ```tsx
 // ExampleComponent.tsx
 import React from "react";
-import { useFeatureFlag } from "./launchDarkly";
+import { useFeatureFlag } from "./LaunchDarkly";
 import { Text } from "react-native";
 
 export const ExampleComponent = () => {
