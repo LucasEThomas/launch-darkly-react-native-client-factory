@@ -1,0 +1,31 @@
+{
+  "name": "launch-darkly-react-native-client-factory",
+  "version": "0.0.0",
+  "description": "An ergonomic wrapper around the launch-darkly-react-native sdk, featuring *hooks*",
+  "main": "index.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "launch",
+    "darkly",
+    "react",
+    "native"
+  ],
+  "author": "Lucas Thomas",
+  "license": "ISC",
+  "peerDependencies": {
+    "launchdarkly-react-native-client-sdk": ">=7.0.0",
+    "react": ">=17.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.48.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "lint": "^0.8.19",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@types/react": "^18.2.21"
+  }
+}

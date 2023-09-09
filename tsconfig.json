@@ -1,0 +1,27 @@
+{
+  // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
+  "include": [
+    "src",
+    "types",
+    "tests/LaunchDarklyReactNativeClientFactory.test.ts",
+    "tests/exampleComponent.tsx"
+  ],
+  "compilerOptions": {
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": ["es6"],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "esnext",
+    "skipLibCheck": true,
+    "alwaysStrict": true,
+    "allowUnreachableCode": false,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmitOnError": true
+  }
+}
