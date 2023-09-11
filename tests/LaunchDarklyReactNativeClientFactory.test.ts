@@ -1,5 +1,5 @@
 // todo, this isn't actually any kind of test, and it should be
-import { LaunchDarklyReactNativeClientFactory } from "../src/index";
+import { LaunchDarklyReactNativeClientFactory } from "../index";
 
 export const {
   LaunchDarklyProvider,
