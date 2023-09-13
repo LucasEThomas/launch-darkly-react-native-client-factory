@@ -3,20 +3,20 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useState,
-} from "react";
+  useState
+} from 'react'
 
 import LDClient, {
   LDConfig,
-  LDContext,
-} from "launchdarkly-react-native-client-sdk";
-import { NamedFlags } from "./factory.types";
+  LDContext
+} from 'launchdarkly-react-native-client-sdk'
+import { NamedFlags } from './factory.types'
 
 type Props = {
-  children: ReactNode;
-  context?: LDContext;
-  config?: LDConfig;
-};
+  children: ReactNode
+  context?: LDContext
+  config?: LDConfig
+}
 
 /**
  * Create a file called `LaunchDarkly.ts` and put this in it
@@ -45,34 +45,32 @@ type Props = {
 export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
   featureFlags: T
 ) {
-  type FlagType<K extends FlagKey> = ReturnType<T[K]["type"]>;
-  type FlagKey = keyof T;
+  type FlagType<K extends FlagKey> = ReturnType<T[K]['type']>
+  type FlagKey = keyof T
 
   // the private singleton where we keep the launch darkly client
-  let globalLdClient: LDClient | undefined;
+  let globalLdClient: LDClient | undefined
 
   // a private singleton reference to a function that uses the launch darkly client
   let globalGetFeatureFlag = <K extends FlagKey>(
     key: K,
     defaultVal?: FlagType<K>
   ): Promise<FlagType<K>> =>
-    Promise.resolve(
-      (defaultVal ?? featureFlags[key]?.defaultVal) as FlagType<K>
-    );
+    Promise.resolve<FlagType<K>>(defaultVal ?? featureFlags[key]?.defaultVal)
 
   /**
    * gets the global launch darkly client singleton
    */
   function getGlobalLdClient() {
-    return globalLdClient;
+    return globalLdClient
   }
 
   /**
    * sets the global launch darkly client singleton
    */
   function setGlobalLdClient(ldClient: LDClient) {
-    globalLdClient = ldClient;
-    globalGetFeatureFlag = getGetFeatureFlag(globalLdClient);
+    globalLdClient = ldClient
+    globalGetFeatureFlag = getGetFeatureFlag(globalLdClient)
   }
 
   // this function creates the getFeatureFlag() function
@@ -80,8 +78,8 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     key: K,
     defaultVal?: FlagType<K>
   ): Promise<FlagType<K>> => {
-    const type = featureFlags[key]?.type as FlagType<K>;
-    const defaultVal2 = defaultVal ?? featureFlags[key]?.defaultVal;
+    const type = featureFlags[key]?.type as FlagType<K>
+    const defaultVal2 = defaultVal ?? featureFlags[key]?.defaultVal
     return type === Boolean
       ? await ldClient.boolVariation(
           key as string,
@@ -99,8 +97,8 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
         )
       : type === Object
       ? JSON.parse(await ldClient.jsonVariation(key as string, defaultVal2))
-      : undefined;
-  };
+      : undefined
+  }
 
   /**
    * This is an escape hatch function in case you need to get feature flags outside of the React context.
@@ -112,57 +110,64 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     key: K,
     defaultVal?: FlagType<K>
   ): Promise<FlagType<typeof key>> {
-    return globalGetFeatureFlag(key, defaultVal);
+    return globalGetFeatureFlag(key, defaultVal)
   }
 
   const LaunchDarklyContext = createContext<{
-    client: LDClient | undefined;
-    flags: T | undefined;
-  }>({ client: undefined, flags: undefined });
+    client: LDClient | 'loading...' | undefined
+    flags: T | undefined
+  }>({ client: undefined, flags: undefined })
 
   function LaunchDarklyProvider({ children, context, config }: Props) {
-    const [client, setClient] = useState<LDClient>();
-    const [flags, setFlags] = useState<typeof featureFlags>();
+    const [client, setClient] = useState<LDClient | 'loading...'>()
+    const [flags, setFlags] = useState<T>()
 
     useEffect(() => {
-      (async () => {
-        if (!context || !config) return;
+      if (!context || !config) return
+      // todo: only the first context and config passed in (that are not undefined) will create a new LDClient.
+      // todo: This may confuse devs who might expect the LDClient to get destroyed and recreated whenever context is changed.
+      if (getGlobalLdClient()) return
+      setClient('loading...')
+      ;(async () => {
+        const newClient = new LDClient()
+        await newClient.identify(context)
+        await newClient.configure(config, context)
+        setClient(newClient)
+        setGlobalLdClient(newClient)
+      })()
+    }, [context, config])
 
-        const newClient = new LDClient();
-        newClient.identify(context);
-        newClient.configure(config, context);
-        setClient(newClient);
-        setGlobalLdClient(newClient);
+    useEffect(() => {
+      if (!client || client === 'loading...') return
 
-        const destructors = Object.keys(featureFlags).map((key) => {
-          const listener = async (updatedKey: string) => {
-            const newFlag = await getFeatureFlag(updatedKey as FlagKey);
-            setFlags(
-              (oldFlags) =>
-                ({
-                  ...oldFlags,
-                  [updatedKey]: newFlag,
-                } as typeof featureFlags)
-            );
-          };
-          // call the listener at the beginning because the launch darkly listener doesn't do this for us
-          listener(key);
-          // register the launch darkly flag listener
-          newClient?.registerFeatureFlagListener(key, listener);
-          // return the destructor
-          return () => newClient?.unregisterFeatureFlagListener(key, listener);
-        });
+      const destructors = Object.keys(featureFlags).map(key => {
+        const listener = async (updatedKey: string) => {
+          const newFlag = await getFeatureFlag(updatedKey as FlagKey)
+          setFlags(
+            oldFlags =>
+              ({
+                ...oldFlags,
+                [updatedKey]: newFlag
+              } as T)
+          )
+        }
+        // call the listener at the beginning because the launch darkly listener doesn't do this for us
+        listener(key)
+        // register the launch darkly flag listener
+        client.registerFeatureFlagListener(key, listener)
+        // return the destructor
+        return () => client.unregisterFeatureFlagListener(key, listener)
+      })
 
-        // clean up by calling each unregister listener function created above
-        return () => destructors.forEach((d) => d());
-      })();
-    }, [context, config]);
+      // clean up by calling each unregister listener function created above
+      return () => destructors.forEach(d => d())
+    }, [client])
 
     return (
       <LaunchDarklyContext.Provider value={{ client, flags }}>
         {children}
       </LaunchDarklyContext.Provider>
-    );
+    )
   }
 
   /**
@@ -173,12 +178,12 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     key: T,
     defaultVal?: FlagType<T>
   ) => {
-    const { flags } = useContext(LaunchDarklyContext);
+    const { flags } = useContext(LaunchDarklyContext)
 
     return (flags?.[key] ??
       defaultVal ??
-      featureFlags[key].defaultVal) as FlagType<typeof key>;
-  };
+      featureFlags[key].defaultVal) as FlagType<typeof key>
+  }
 
   /**
    * This hook returns an object containing all of the feature flags
@@ -187,34 +192,35 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     string,
     boolean | number | string | object
   > => {
-    const [flags, setFlags] = useState({});
-    const { client } = useContext(LaunchDarklyContext);
+    const [flags, setFlags] = useState({})
+    const { client } = useContext(LaunchDarklyContext)
 
     useEffect(() => {
-      if (!client) return;
-      const listener = async (updatedKeys: string[]) => {
-        updatedKeys.forEach(async (updatedKey) => {
-          const flagVal = await getFeatureFlag(updatedKey as FlagKey);
-          setFlags((oldFlags) => ({
+      if (!client || client === 'loading...') return
+      const listener = (updatedKeys: string[]) => {
+        updatedKeys.forEach(async updatedKey => {
+          const flagVal = await getFeatureFlag(updatedKey as FlagKey)
+          setFlags(oldFlags => ({
             ...oldFlags,
-            [updatedKey]: flagVal,
-          }));
-        });
-      };
+            [updatedKey]: flagVal
+          }))
+        })
+      }
       // register the launch darkly all flags listener
-      client.registerAllFlagsListener("herpnerp", listener);
+      const uniqueId = Date.now().toString()
+      client.registerAllFlagsListener(uniqueId, listener)
       // we have to make the initial call to bring in the flag values because LD doesn't do that for us.
-      listener(Object.keys(featureFlags));
-      return () => client?.unregisterAllFlagsListener("herpnerp");
-    }, [client]);
-    return flags;
-  };
+      listener(Object.keys(featureFlags))
+      return () => client.unregisterAllFlagsListener(uniqueId)
+    }, [client])
+    return flags
+  }
 
   return {
     LaunchDarklyProvider,
     useFeatureFlag,
     useAllFeatureFlags,
     getGlobalLdClient,
-    getFeatureFlag,
-  };
+    getFeatureFlag
+  }
 }

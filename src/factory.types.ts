@@ -3,17 +3,17 @@ type PrimitiveConstructor =
   | BooleanConstructor
   | NumberConstructor
   | StringConstructor
-  | ObjectConstructor;
+  | ObjectConstructor
 
 type FeatureFlag<T extends PrimitiveConstructor> = {
-  type: T;
-  defaultVal: ReturnType<T>;
-};
+  type: T
+  defaultVal: ReturnType<T>
+}
 
 type AnyFeatureFlag =
   | FeatureFlag<BooleanConstructor>
   | FeatureFlag<NumberConstructor>
   | FeatureFlag<StringConstructor>
-  | FeatureFlag<ObjectConstructor>;
+  | FeatureFlag<ObjectConstructor>
 
-export type NamedFlags = Record<string, AnyFeatureFlag>;
+export type NamedFlags = Record<string, AnyFeatureFlag>
