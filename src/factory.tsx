@@ -126,7 +126,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
       if (!context || !config) return
       // todo: only the first context and config passed in (that are not undefined) will create a new LDClient.
       // todo: This may confuse devs who might expect the LDClient to get destroyed and recreated whenever context is changed.
-      if (getGlobalLdClient()) return
+      if (getGlobalLdClient() || client) return
       setClient('loading...')
       ;(async () => {
         const newClient = new LDClient()
