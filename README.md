@@ -46,8 +46,8 @@ export const {
   getGlobalLdClient,
   getFeatureFlag,
 } = LaunchDarklyReactNativeClientFactory({
-  // ***************************************************************
-  // ! any feature flags that your app uses, must be declared here !
+  // **************************************************************
+  // ! any feature flags that your app uses must be declared here !
   // ***************************************************************
   'example-boolean-feature-flag': { type: Boolean, defaultVal: false },
   'example-number-feature-flag': { type: Number, defaultVal: 123 },
@@ -105,4 +105,4 @@ export const ExampleComponent = () => {
 }
 ```
 
-This library has a few other features (such as overriding a flag's default value). You will find it all documented in the jsdocs comments in the codebase.
+This library has a few other features (such as overriding a flag's default value). You will find it (mostly) documented in the jsdocs comments in the codebase.

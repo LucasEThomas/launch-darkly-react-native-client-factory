@@ -3,12 +3,12 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useState
+  useState,
 } from 'react'
 
 import LDClient, {
   LDConfig,
-  LDContext
+  LDContext,
 } from 'launchdarkly-react-native-client-sdk'
 import { NamedFlags } from './factory.types'
 
@@ -74,31 +74,30 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
   }
 
   // this function creates the getFeatureFlag() function
-  const getGetFeatureFlag = (ldClient: LDClient) => async <K extends FlagKey>(
-    key: K,
-    defaultVal?: FlagType<K>
-  ): Promise<FlagType<K>> => {
-    const type = featureFlags[key]?.type as FlagType<K>
-    const defaultVal2 = defaultVal ?? featureFlags[key]?.defaultVal
-    return type === Boolean
-      ? await ldClient.boolVariation(
-          key as string,
-          (defaultVal2 as unknown) as boolean
-        )
-      : type === Number
-      ? await ldClient.numberVariation(
-          key as string,
-          (defaultVal2 as unknown) as number
-        )
-      : type === String
-      ? await ldClient.stringVariation(
-          key as string,
-          (defaultVal2 as unknown) as string
-        )
-      : type === Object
-      ? JSON.parse(await ldClient.jsonVariation(key as string, defaultVal2))
-      : undefined
-  }
+  const getGetFeatureFlag =
+    (ldClient: LDClient) =>
+    async <K extends FlagKey>(
+      key: K,
+      defaultVal?: FlagType<K>
+    ): Promise<FlagType<K>> => {
+      if (typeof key !== 'string')
+        throw 'non string key passed to getFeatureFlag'
+      if (!featureFlags[key]) throw 'unregistered key passed to getFeatureFlag'
+
+      const type = featureFlags[key].type as FlagType<K>
+      const _defaultVal = defaultVal ?? featureFlags[key].defaultVal
+      if (type === Boolean) {
+        return (await ldClient.boolVariation(key, _defaultVal)) as FlagType<K>
+      } else if (type === Number) {
+        return (await ldClient.numberVariation(key, _defaultVal)) as FlagType<K>
+      } else if (type === String) {
+        return (await ldClient.stringVariation(key, _defaultVal)) as FlagType<K>
+      } else if (type === Object) {
+        return (await ldClient.jsonVariation(key, _defaultVal)) as FlagType<K>
+      } else {
+        throw 'invalid type passed to getFeatureFlag'
+      }
+    }
 
   /**
    * This is an escape hatch function in case you need to get feature flags outside of the React context.
@@ -140,14 +139,14 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     useEffect(() => {
       if (!client || client === 'loading...') return
 
-      const destructors = Object.keys(featureFlags).map(key => {
+      const destructors = Object.keys(featureFlags).map((key) => {
         const listener = async (updatedKey: string) => {
           const newFlag = await getFeatureFlag(updatedKey as FlagKey)
           setFlags(
-            oldFlags =>
+            (oldFlags) =>
               ({
                 ...oldFlags,
-                [updatedKey]: newFlag
+                [updatedKey]: newFlag,
               } as T)
           )
         }
@@ -160,7 +159,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
       })
 
       // clean up by calling each unregister listener function created above
-      return () => destructors.forEach(d => d())
+      return () => destructors.forEach((d) => d())
     }, [client])
 
     return (
@@ -198,11 +197,11 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     useEffect(() => {
       if (!client || client === 'loading...') return
       const listener = (updatedKeys: string[]) => {
-        updatedKeys.forEach(async updatedKey => {
+        updatedKeys.forEach(async (updatedKey) => {
           const flagVal = await getFeatureFlag(updatedKey as FlagKey)
-          setFlags(oldFlags => ({
+          setFlags((oldFlags) => ({
             ...oldFlags,
-            [updatedKey]: flagVal
+            [updatedKey]: flagVal,
           }))
         })
       }
@@ -221,6 +220,6 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     useFeatureFlag,
     useAllFeatureFlags,
     getGlobalLdClient,
-    getFeatureFlag
+    getFeatureFlag,
   }
 }
