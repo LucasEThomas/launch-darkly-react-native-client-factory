@@ -45,59 +45,19 @@ type Props = {
 export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
   featureFlags: T
 ) {
+  // dynamic types
   type FlagType<K extends FlagKey> = ReturnType<T[K]['type']>
   type FlagKey = keyof T
 
-  // the private singleton where we keep the launch darkly client
   let globalLdClient: LDClient | undefined
-
-  // a private singleton reference to a function that uses the launch darkly client
-  let globalGetFeatureFlag = <K extends FlagKey>(
-    key: K,
-    defaultVal?: FlagType<K>
-  ): Promise<FlagType<K>> =>
-    Promise.resolve<FlagType<K>>(defaultVal ?? featureFlags[key]?.defaultVal)
-
   /**
-   * gets the global launch darkly client singleton
+   * get the global launch darkly client singleton
    */
-  function getGlobalLdClient() {
-    return globalLdClient
-  }
-
+  const getGlobalLdClient = () => globalLdClient
   /**
-   * sets the global launch darkly client singleton
+   * set the global launch darkly client singleton
    */
-  function setGlobalLdClient(ldClient: LDClient) {
-    globalLdClient = ldClient
-    globalGetFeatureFlag = getGetFeatureFlag(globalLdClient)
-  }
-
-  // this function creates the getFeatureFlag() function
-  const getGetFeatureFlag =
-    (ldClient: LDClient) =>
-    async <K extends FlagKey>(
-      key: K,
-      defaultVal?: FlagType<K>
-    ): Promise<FlagType<K>> => {
-      if (typeof key !== 'string')
-        throw 'non string key passed to getFeatureFlag'
-      if (!featureFlags[key]) throw 'unregistered key passed to getFeatureFlag'
-
-      const type = featureFlags[key].type as FlagType<K>
-      const _defaultVal = defaultVal ?? featureFlags[key].defaultVal
-      if (type === Boolean) {
-        return (await ldClient.boolVariation(key, _defaultVal)) as FlagType<K>
-      } else if (type === Number) {
-        return (await ldClient.numberVariation(key, _defaultVal)) as FlagType<K>
-      } else if (type === String) {
-        return (await ldClient.stringVariation(key, _defaultVal)) as FlagType<K>
-      } else if (type === Object) {
-        return (await ldClient.jsonVariation(key, _defaultVal)) as FlagType<K>
-      } else {
-        throw 'invalid type passed to getFeatureFlag'
-      }
-    }
+  const setGlobalLdClient = (ldClient: LDClient) => (globalLdClient = ldClient)
 
   /**
    * This is an escape hatch function in case you need to get feature flags outside of the React context.
@@ -105,11 +65,32 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
    * If you find yourself using this a lot, consider your app's architecture. Perhaps it needs a refactor?
    * @returns a promise containing the flag value
    */
-  function getFeatureFlag<K extends FlagKey>(
+  const getFeatureFlag = async <K extends FlagKey>(
     key: K,
     defaultVal?: FlagType<K>
-  ): Promise<FlagType<typeof key>> {
-    return globalGetFeatureFlag(key, defaultVal)
+  ): Promise<FlagType<typeof key>> => {
+    if (typeof key !== 'string') throw 'non string key passed to getFeatureFlag'
+    if (!featureFlags[key]) throw 'unregistered key passed to getFeatureFlag'
+
+    const ldClient = getGlobalLdClient()
+    if (!ldClient) {
+      console.log('getFeatureFlag called before ldClient initialized')
+      return defaultVal ?? featureFlags[key]?.defaultVal
+    }
+
+    const type = featureFlags[key].type as FlagType<K>
+    const _defaultVal = defaultVal ?? featureFlags[key].defaultVal
+    if (type === Boolean) {
+      return (await ldClient.boolVariation(key, _defaultVal)) as FlagType<K>
+    } else if (type === Number) {
+      return (await ldClient.numberVariation(key, _defaultVal)) as FlagType<K>
+    } else if (type === String) {
+      return (await ldClient.stringVariation(key, _defaultVal)) as FlagType<K>
+    } else if (type === Object) {
+      return (await ldClient.jsonVariation(key, _defaultVal)) as FlagType<K>
+    } else {
+      throw 'invalid type passed to getFeatureFlag: ' + type
+    }
   }
 
   const LaunchDarklyContext = createContext<{
@@ -117,7 +98,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     flags: T | undefined
   }>({ client: undefined, flags: undefined })
 
-  function LaunchDarklyProvider({ children, context, config }: Props) {
+  const LaunchDarklyProvider = ({ children, context, config }: Props) => {
     const [client, setClient] = useState<LDClient | 'loading...'>()
     const [flags, setFlags] = useState<T>()
 
