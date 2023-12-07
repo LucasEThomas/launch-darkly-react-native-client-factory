@@ -65,7 +65,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
    * If you find yourself using this a lot, consider your app's architecture. Perhaps it needs a refactor?
    * @returns a promise containing the flag value
    */
-  const getFeatureFlag = async <K extends FlagKey>(
+  const getFeatureFlagAsync = async <K extends FlagKey>(
     key: K,
     defaultVal?: FlagType<K>
   ): Promise<FlagType<typeof key>> => {
@@ -98,6 +98,14 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     flags: T | undefined
   }>({ client: undefined, flags: undefined })
 
+  let escapeHatchFlags: T | undefined
+  const getFeatureFlagEscapeHatch = <K extends FlagKey>(
+    key: K,
+    defaultVal?: FlagType<K>
+  ): FlagType<typeof key> => {
+    return escapeHatchFlags?.[key] || defaultVal || featureFlags[key].defaultVal
+  }
+
   const LaunchDarklyProvider = ({ children, context, config }: Props) => {
     const [client, setClient] = useState<LDClient | 'loading...'>()
     const [flags, setFlags] = useState<T>()
@@ -118,11 +126,15 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     }, [context, config])
 
     useEffect(() => {
+      escapeHatchFlags = flags
+    }, [flags])
+
+    useEffect(() => {
       if (!client || client === 'loading...') return
 
       const destructors = Object.keys(featureFlags).map((key) => {
         const listener = async (updatedKey: string) => {
-          const newFlag = await getFeatureFlag(updatedKey as FlagKey)
+          const newFlag = await getFeatureFlagAsync(updatedKey as FlagKey)
           setFlags(
             (oldFlags) =>
               ({
@@ -179,7 +191,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
       if (!client || client === 'loading...') return
       const listener = (updatedKeys: string[]) => {
         updatedKeys.forEach(async (updatedKey) => {
-          const flagVal = await getFeatureFlag(updatedKey as FlagKey)
+          const flagVal = await getFeatureFlagAsync(updatedKey as FlagKey)
           setFlags((oldFlags) => ({
             ...oldFlags,
             [updatedKey]: flagVal,
@@ -201,6 +213,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     useFeatureFlag,
     useAllFeatureFlags,
     getGlobalLdClient,
-    getFeatureFlag,
+    getFeatureFlagAsync,
+    getFeatureFlag: getFeatureFlagEscapeHatch,
   }
 }
