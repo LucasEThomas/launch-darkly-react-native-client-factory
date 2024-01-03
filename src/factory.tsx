@@ -209,6 +209,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
   }
 
   return {
+    LaunchDarklyContext,
     LaunchDarklyProvider,
     useFeatureFlag,
     useAllFeatureFlags,
