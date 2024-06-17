@@ -103,7 +103,7 @@ export function LaunchDarklyReactNativeClientFactory<T extends NamedFlags>(
     key: K,
     defaultVal?: FlagType<K>
   ): FlagType<typeof key> => {
-    return escapeHatchFlags?.[key] || defaultVal || featureFlags[key].defaultVal
+    return escapeHatchFlags?.[key] ?? defaultVal ?? featureFlags[key].defaultVal
   }
 
   const LaunchDarklyProvider = ({ children, context, config }: Props) => {
